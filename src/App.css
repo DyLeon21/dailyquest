@@ -1200,3 +1200,333 @@ h1, h2, h3 {
 .backup-file-input {
   display: none;
 }
+/* DAILYQUEST – ABENTEUER */
+
+.adventure-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.adventure-heading {
+  text-align: center;
+}
+
+.adventure-heading > span,
+.adventure-label {
+  color: #238e81;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+
+.adventure-heading h1 {
+  color: #205f67;
+  font-size: 32px;
+  margin: 8px 0;
+}
+
+.adventure-heading p {
+  color: #64848a;
+  margin: 0;
+}
+
+.adventure-intro {
+  background: #fff5df;
+  border: 2px solid #e8d5a9;
+  border-radius: 22px;
+  padding: 24px;
+  box-shadow: 0 8px 24px rgba(70, 50, 20, 0.08);
+}
+
+.adventure-intro h2 {
+  font-size: 32px;
+  color: #62492d;
+  margin: 12px 0 0;
+}
+
+.adventure-intro h3 {
+  color: #80623e;
+  margin: 4px 0 14px;
+}
+
+.adventure-intro p {
+  line-height: 1.6;
+  color: #69553c;
+}
+
+.adventure-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 13px;
+  color: #62492d;
+}
+
+.adventure-map-placeholder {
+  min-height: 340px;
+  border-radius: 24px;
+  background: linear-gradient(160deg, #9dd8c4, #397f81);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 24px;
+}
+
+.adventure-map-placeholder > span {
+  font-size: 70px;
+}
+
+.adventure-map-placeholder h2,
+.adventure-map-placeholder p {
+  color: white;
+}
+
+.adventure-map-placeholder p {
+  font-size: 13px;
+}
+.adventure-map {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 22px;
+  background: #126f78;
+}
+
+.adventure-map-image {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+/* DailyQuest – kompakter Abenteuerkopf */
+
+.adventure-compact-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 18px;
+  border-radius: 18px;
+  background: #fff5df;
+  border: 1px solid #e8d5a9;
+}
+
+.adventure-compact-header h2 {
+  margin: 5px 0 0;
+  font-size: 25px;
+  color: #62492d;
+}
+
+.adventure-compact-header p {
+  margin: 3px 0 0;
+  color: #80623e;
+  font-size: 13px;
+}
+
+.adventure-compact-details {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  flex-shrink: 0;
+  font-size: 11px;
+  color: #62492d;
+}
+
+@media (max-width: 400px) {
+  .adventure-compact-header {
+    padding: 12px;
+  }
+
+  .adventure-compact-header h2 {
+    font-size: 22px;
+  }
+
+  .adventure-compact-details {
+    font-size: 10px;
+  }
+}
+/* DAILYQUEST – ABENTEUERÜBERSICHT */
+
+.adventure-overview {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.adventure-overview-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.adventure-overview-header > span {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #238e81;
+}
+
+.adventure-overview-header h1 {
+  font-size: 28px;
+  color: #205f67;
+  margin: 10px 0;
+}
+
+.adventure-overview-header p {
+  font-size: 13px;
+  color: #64848a;
+}
+
+.adventure-world-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.adventure-world-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+  padding: 0;
+  text-align: left;
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid #dcece8;
+  box-shadow: 0 6px 18px rgba(30, 80, 80, 0.08);
+  color: #205f67;
+}
+
+.adventure-world-card.available {
+  cursor: pointer;
+}
+
+.adventure-world-card.available:hover {
+  background: #f2faf6;
+}
+
+.adventure-world-card img {
+  width: 100%;
+  height: 170px;
+  object-fit: cover;
+  object-position: center;
+}
+
+.adventure-world-preview {
+  height: 170px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, #c6dcd3, #83aca6);
+}
+
+.adventure-world-preview span {
+  font-size: 56px;
+}
+
+.adventure-world-card.upcoming {
+  opacity: 0.7;
+}
+
+.adventure-world-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+}
+
+.adventure-world-info strong {
+  font-size: 18px;
+}
+
+.adventure-world-info > span {
+  font-size: 12px;
+  color: #64848a;
+}
+
+.adventure-world-info small {
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #238e81;
+}
+
+.adventure-back-button {
+  align-self: flex-start;
+  padding: 10px 14px;
+  background: #e0f3eb;
+  color: #238e81;
+  font-size: 13px;
+}
+
+.adventure-back-button:hover {
+  background: #cce9dd;
+}
+
+@media (max-width: 400px) {
+  .adventure-world-grid {
+    gap: 10px;
+  }
+
+  .adventure-world-card img,
+  .adventure-world-preview {
+    height: 140px;
+  }
+
+  .adventure-world-info {
+    padding: 11px;
+  }
+
+  .adventure-world-info strong {
+    font-size: 16px;
+  }
+}
+
+/* Fortschrittsanzeige */
+
+.josua-progress {
+  margin-top: 18px;
+}
+
+.josua-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 9px;
+  font-size: 13px;
+}
+
+.josua-progress-header strong {
+  color: #238e81;
+  font-size: 12px;
+}
+
+.josua-progress-track {
+  width: 100%;
+  height: 10px;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #e4d6b8;
+}
+
+.josua-progress-fill {
+  height: 100%;
+  border-radius: 20px;
+  background: linear-gradient(90deg, #45b99c, #238e81);
+  transition: width 0.3s ease;
+}
+
+.josua-complete-message {
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #d9f3e4;
+  color: #18734c;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}

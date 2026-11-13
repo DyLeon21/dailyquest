@@ -2,6 +2,9 @@
 import { useEffect, useState } from 'react'
 import { bibleBooks } from './bibleData'
 import './App.css'
+import JosuaAdventure from './JosuaAdventure'
+import JosuaUnlock from './JosuaUnlock'
+import AdventureBadges from './AdventureBadges'
 
 type Reading = {
   bookId: string
@@ -122,6 +125,7 @@ function getNextUnread(
 
 function App() {
   const [readings, setReadings] = useState<Reading[]>(loadReadings)
+  const [showJosuaUnlock, setShowJosuaUnlock] = useState(false)
   const [xp, setXp] = useState<number>(() => {
   try {
     return Number(localStorage.getItem(XP_STORAGE_KEY) || '0')
@@ -195,7 +199,7 @@ function toggleHistoricalBook(id: string) {
   const [end, setEnd] = useState(10)
 
 const [page, setPage] = useState<
-  'home' | 'reading' | 'history' | 'profile'
+ 'home' | 'reading' | 'history' | 'profile' | 'adventure' | 'adventure-map'
 >('home')
 
 const [showAllRanks, setShowAllRanks] = useState(false)
@@ -565,6 +569,24 @@ function saveReading() {
     })
   }
 
+    // 150 Bonus-XP für das Josua-Abenteuer
+    if (
+      bookId === 'jos' &&
+      !wasBookComplete &&
+      isBookComplete &&
+      !xpHistory.some(entry => entry.id === 'jos-adventure')
+    ) {
+      newEntries.push({
+        id: 'jos-adventure',
+        date: today,
+        description: 'Abzeichen: Eroberer von Kanaan 🏆',
+        amount: 150,
+      })
+
+setShowJosuaUnlock(true)
+
+    }
+
   // Alle XP gemeinsam berechnen
   const earnedXp = newEntries.reduce(
     (sum, entry) => sum + entry.amount,
@@ -849,6 +871,17 @@ function deleteReading(readingToDelete: Reading) {
     removedRewardIds.push(`${book.id}-book`)
   }
 
+    // Josua-Abenteuerbonus zurücknehmen
+    if (
+      book.id === 'jos' &&
+      bookWasComplete &&
+      !bookIsComplete &&
+      xpHistory.some(entry => entry.id === 'jos-adventure')
+    ) {
+      xpToRemove += 150
+      removedRewardIds.push('jos-adventure')
+    }
+
   // Fortschritt speichern
   setReadings(updated)
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
@@ -899,6 +932,22 @@ function deleteReading(readingToDelete: Reading) {
   )
 }
 
+  // Fortschritt für die Josua-Abenteuerkarte
+  const josuaBook = bibleBooks.find(book => book.id === 'jos')
+
+  const josuaCompletedChapters = (josuaBook?.verses ?? []).map(
+    (verseCount, index) =>
+      historicalBooks.includes('jos') ||
+      getReadVerses(
+        readings,
+        'jos',
+        index + 1,
+        verseCount
+      ).size === verseCount
+  )
+const josuaBadgeUnlocked =
+  josuaCompletedChapters.length === 24 &&
+  josuaCompletedChapters.every(Boolean)
 const chapterReadings = readings.filter(
   r => r.bookId === bookId && r.chapter === chapter
 )
@@ -1232,12 +1281,94 @@ const chapterReadings = readings.filter(
 </button>
 
   </div>
+) : page === 'adventure' ? (
+  <div className="adventure-overview">
+    <header className="adventure-overview-header">
+      <span>🌍 ENTDECKE DIE BIBEL</span>
+      <h1>Deine Abenteuerwelten</h1>
+      <p>Jedes Bibelbuch erzählt seine eigene Geschichte.</p>
+    </header>
 
+    <div className="adventure-world-grid">
+      <button
+        type="button"
+        className="adventure-world-card available"
+        onClick={() => setPage('adventure-map')}
+      >
+        <img
+          src={`${import.meta.env.BASE_URL}josua-map.png`}
+          alt="Low-Poly-Landschaft von Josua"
+        />
+        <div className="adventure-world-info">
+          <strong>Josua</strong>
+          <span>Die Eroberung Kanaans</span>
+          <small>🏔️ Abenteuer betreten →</small>
+        </div>
+      </button>
 
+      {[
+        { title: '2. Mose', subtitle: 'Der Auszug aus Ägypten', icon: '🏜️' },
+        { title: 'Richter', subtitle: 'Mut und Glauben', icon: '⚔️' },
+        { title: '1. Samuel', subtitle: 'Propheten und Könige', icon: '👑' },
+      ].map(world => (
+        <div className="adventure-world-card upcoming" key={world.title}>
+          <div className="adventure-world-preview">
+            <span>{world.icon}</span>
+          </div>
+          <div className="adventure-world-info">
+            <strong>{world.title}</strong>
+            <span>{world.subtitle}</span>
+            <small>🔒 In Vorbereitung</small>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+) : page === 'adventure-map' ? (
+  <div className="adventure-page">
+    <button
+  type="button"
+  className="adventure-back-button"
+  onClick={() => setPage('adventure')}
+>
+  ← Alle Abenteuer
+</button>
+    <div className="adventure-heading">
+      <span>🏔️ DEINE BIBELREISE</span>
+      <h1>Abenteuer</h1>
+      <p>Erlebe die Bibel – Buch für Buch.</p>
+    </div>
+
+   <section className="adventure-compact-header">
+  <div>
+    <span className="adventure-label">DEIN ERSTES ABENTEUER</span>
+    <h2>Josua</h2>
+    <p>Die Eroberung Kanaans</p>
+  </div>
+
+  <div className="adventure-compact-details">
+    <span>📖 24 Kapitel</span>
+    <span>📍 5 Stationen</span>
+  </div>
+</section>
+
+   
+<JosuaAdventure
+  completedChapters={josuaCompletedChapters}
+  onRead={(chapterNumber) => {
+    selectChapter('jos', chapterNumber)
+    setPage('reading')
+  }}
+/>
+
+  </div>
       
 ) : page === 'profile' ? (
   <div className="home-mobile">
     <section className="home-panel">
+
+      
+
       <button
         className="back"
         onClick={() => setPage('home')}
@@ -1257,6 +1388,7 @@ const chapterReadings = readings.filter(
         <strong>{xp} XP gesammelt</strong>
       </div>
     </section>
+
 
     <section className="home-panel">
       <h2>📖 Meine Bibelreise</h2>
@@ -1281,6 +1413,7 @@ const chapterReadings = readings.filter(
           <span>🏆 Bibelbücher</span>
           <strong>{completedBooks} / 66</strong>
         </article>
+        <AdventureBadges josuaCompleted={josuaBadgeUnlocked} />
       </div>
     </section>
 
@@ -1576,7 +1709,15 @@ const chapterReadings = readings.filter(
     <span className="bottom-nav-icon">📖</span>
     <span>Bibellesen</span>
   </button>
-
+<button
+  type="button"
+  className={`bottom-nav-item ${page === 'adventure' ? 'active' : ''}`}
+  onClick={() => setPage('adventure')}
+  aria-current={page === 'adventure' ? 'page' : undefined}
+>
+  <span className="bottom-nav-icon">🏔️</span>
+  <span>Abenteuer</span>
+</button>
   <button
     type="button"
     className={`bottom-nav-item ${page === 'profile' ? 'active' : ''}`}
@@ -1587,6 +1728,12 @@ const chapterReadings = readings.filter(
     <span>Profil</span>
   </button>
 </nav>
+
+{showJosuaUnlock && (
+  <JosuaUnlock
+    onClose={() => setShowJosuaUnlock(false)}
+  />
+)}
 
     </main>
   )
