@@ -1,0 +1,318 @@
+/* ── Container ──────────────────────────────────────────────────────────────────────────────────
+   Der Himmel ist ein CSS-Verlauf hinter dem transparenten WebGL-Canvas. Die Engine setzt
+   --sky-top/--sky-mid/--sky-bottom, während man über die Karte fährt. */
+.exodus-map {
+  --sky-top: #7fd6c6;
+  --sky-mid: #bfe8d2;
+  --sky-bottom: #f7efcb;
+  position: relative;
+width: 100%;
+height: 75vh;
+min-height: 550px;
+border-radius: 18px;
+
+
+  overflow: hidden;
+  contain: layout paint;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 48%, var(--sky-bottom) 100%);
+  font-family: 'Fredoka', ui-rounded, 'SF Pro Rounded', system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+.exodus-map.is-dragging {
+  cursor: grabbing;
+}
+/* weiches Sonnenlicht oben links, hinter der 3D-Szene */
+.exodus-map::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 55% at 10% -6%, rgba(255, 238, 176, 0.6), rgba(255, 238, 176, 0) 62%);
+  pointer-events: none;
+}
+.exodus-map__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ── Marker ─────────────────────────────────────────────────────────────────────────────────────
+   Jeder Marker ist ein echter <button>. Die Engine verschiebt den <li> (Nullgröße) auf den
+   Ankerpunkt der Plattform; der Pin wächst von dort nach oben. */
+.exodus-markers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.exodus-marker {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  will-change: transform;
+}
+.exodus-marker[data-offscreen='true'] {
+  visibility: hidden;
+}
+
+.exodus-marker__btn {
+  --m: 46px;
+  --bg: #fff4d4;
+  --fg: #7a4a18;
+  --edge: #e0b04e;
+  position: absolute;
+  left: calc(var(--m) / -2);
+  bottom: 0;
+  width: var(--m);
+  height: calc(var(--m) + 6px);
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+  pointer-events: auto;
+  transform-origin: 50% 100%;
+  transition: transform 0.24s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+/* großzügige Tippfläche */
+.exodus-marker__btn::after {
+  content: '';
+  position: absolute;
+  inset: -8px -8px -4px;
+}
+.exodus-marker__btn[data-status='open'] {
+  --bg: #fff4d4;
+  --fg: #7a4a18;
+  --edge: #e0b04e;
+}
+.exodus-marker__btn[data-status='current'] {
+  --bg: #ffd15c;
+  --fg: #6b3f10;
+  --edge: #d99a2b;
+}
+.exodus-marker__btn[data-status='done'] {
+  --bg: #43b66f;
+  --fg: #ffffff;
+  --edge: #2b8d52;
+}
+.exodus-marker__btn[data-selected='true'] {
+  transform: scale(1.16);
+}
+.exodus-marker__btn:active {
+  transform: scale(0.94);
+}
+.exodus-marker__btn:focus-visible {
+  outline: none;
+}
+.exodus-marker__btn:focus-visible .exodus-marker__pin {
+  outline: 3px solid #0e8f95;
+  outline-offset: 3px;
+}
+
+/* Spitze des Pins (Raute, hinter dem Kreis) */
+.exodus-marker__btn::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: calc(var(--m) - 13px);
+  width: 15px;
+  height: 15px;
+  margin-left: -7.5px;
+  transform: rotate(45deg);
+  background: var(--bg);
+  border-right: 3px solid #fff;
+  border-bottom: 3px solid #fff;
+  border-radius: 0 0 4px 0;
+  box-sizing: border-box;
+  transition: background 0.3s;
+}
+
+.exodus-marker__pin {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--m);
+  height: var(--m);
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  background: var(--bg);
+  color: var(--fg);
+  box-shadow: 0 3px 0 var(--edge), 0 9px 16px rgba(94, 56, 20, 0.32);
+  transition: background 0.3s, color 0.3s, box-shadow 0.3s;
+}
+.exodus-marker__num {
+  font-weight: 600;
+  font-size: 21px;
+  line-height: 1;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+  transform: translateY(0.5px);
+}
+.exodus-marker__check {
+  display: none;
+  width: 26px;
+  height: 26px;
+}
+.exodus-marker__check path {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 3.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+.exodus-marker__btn[data-status='done'] .exodus-marker__num {
+  display: none;
+}
+.exodus-marker__btn[data-status='done'] .exodus-marker__check {
+  display: block;
+}
+.exodus-marker__btn[data-status='done'] .exodus-marker__check path {
+  animation: exodus-check 0.5s 0.1s ease-out backwards;
+}
+
+/* Nächste Station: ruhiger Puls-Ring */
+.exodus-marker__btn[data-status='current'] .exodus-marker__pin::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 209, 92, 0.95);
+  animation: exodus-pulse 1.9s ease-out infinite;
+}
+.exodus-map[data-pulse='false'] .exodus-marker__pin::before {
+  display: none;
+}
+
+/* Beschriftung über dem ausgewählten Marker */
+.exodus-marker__label {
+  position: absolute;
+  left: 0;
+  bottom: 68px;
+  transform: translate(-50%, 6px);
+  padding: 7px 13px 8px;
+  border-radius: 999px;
+  background: rgba(255, 249, 229, 0.97);
+  color: #6b431a;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: 0 6px 16px rgba(94, 56, 20, 0.22);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.25s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+.exodus-marker__label[data-visible='true'] {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+@keyframes exodus-pulse {
+  from {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(1.65);
+    opacity: 0;
+  }
+}
+@keyframes exodus-check {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .exodus-marker__btn[data-status='current'] .exodus-marker__pin::before {
+    animation: none;
+    opacity: 0.6;
+  }
+  .exodus-marker__btn[data-status='done'] .exodus-marker__check path {
+    animation: none;
+  }
+  .exodus-marker__btn,
+  .exodus-marker__label {
+    transition: none;
+  }
+}
+
+/* ── Ladehinweis ────────────────────────────────────────────────────────────────────────────── */
+.exodus-map__loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+.exodus-map__loading[data-hidden='true'] {
+  opacity: 0;
+}
+.exodus-map__loading span {
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: rgba(255, 249, 229, 0.92);
+  color: #6b431a;
+  font-weight: 500;
+  font-size: 15px;
+}
+
+/* ── Fallback ohne WebGL ────────────────────────────────────────────────────────────────────── */
+.exodus-map--fallback {
+  padding: 24px 20px 40px;
+  overflow: auto;
+  cursor: default;
+  touch-action: auto;
+  color: #5b3a16;
+}
+.exodus-fallback__msg {
+  margin: 0 0 20px;
+  font-size: 16px;
+  line-height: 1.45;
+}
+.exodus-fallback__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+}
+.exodus-fallback__list li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.exodus-marker__btn--static {
+  position: relative;
+  left: auto;
+  bottom: auto;
+  flex: none;
+}
+.exodus-fallback__title {
+  display: grid;
+  font-weight: 600;
+  font-size: 17px;
+}
+.exodus-fallback__title small {
+  font-weight: 500;
+  font-size: 14px;
+  opacity: 0.75;
+}

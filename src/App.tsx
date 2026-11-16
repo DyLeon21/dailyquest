@@ -5,6 +5,13 @@ import './App.css'
 import JosuaAdventure from './JosuaAdventure'
 import JosuaUnlock from './JosuaUnlock'
 import AdventureBadges from './AdventureBadges'
+import { ExodusMap } from './exodus-map/exodus-map';
+import type { StationInfo } from './exodus-map/exodus-map';
+
+
+
+
+
 
 type Reading = {
   bookId: string
@@ -198,14 +205,17 @@ function toggleHistoricalBook(id: string) {
   const [start, setStart] = useState(1)
   const [end, setEnd] = useState(10)
 
-const [page, setPage] = useState<
- 'home' | 'reading' | 'history' | 'profile' | 'adventure' | 'adventure-map'
->('home')
+
+const [page, setPage] = useState<'home' | 'reading' | 'history' | 'profile' | 'adventure' | 'adventure-map' | 'exodus-map'>('home')
+
+const [selectedExodusStation, setSelectedExodusStation] = useState<StationInfo | null>(null)
+
 
 const [showAllRanks, setShowAllRanks] = useState(false)
 
 const [userName, setUserName] = useState(() => {
-  return localStorage.getItem('dailyquest-user-name') || 'Leon'
+return localStorage.getItem('dailyquest-user-name') || ''
+
 })
 
 const [isEditingName, setIsEditingName] = useState(false)
@@ -243,14 +253,16 @@ const timeOfDay =
         : 'night'
 
 
+
 const greeting =
   timeOfDay === 'morning'
-    ? `Guten Morgen, ${userName}! ☀️`
+    ? `Guten Morgen${userName ? `, ${userName}` : ''}! ☀️`
     : timeOfDay === 'day'
-      ? `Guten Tag, ${userName}! 🌿`
-      : timeOfDay === 'evening'
-        ? `Guten Abend, ${userName}! 🌅`
-        : `Gute Nacht, ${userName}! 🌙`
+    ? `Guten Tag${userName ? `, ${userName}` : ''}! 🌿`
+    : timeOfDay === 'evening'
+    ? `Guten Abend${userName ? `, ${userName}` : ''}! 🌇`
+    : `Gute Nacht${userName ? `, ${userName}` : ''}! 🌙`
+
 
 
 const greetingSubtitle =
@@ -584,8 +596,26 @@ function saveReading() {
       })
 
 setShowJosuaUnlock(true)
+}
 
-    }
+
+// 150 Bonus-XP für das Ägypten-Abenteuer
+if (
+  bookId === 'exo' &&
+  !wasBookComplete &&
+  isBookComplete &&
+  !xpHistory.some(entry => entry.id === 'exo-adventure')
+) {
+  newEntries.push({
+    id: 'exo-adventure',
+    date: today,
+    description: 'Abzeichen: Auf dem Weg in die Freiheit 🏆',
+    amount: 150,
+  })
+}
+
+
+    
 
   // Alle XP gemeinsam berechnen
   const earnedXp = newEntries.reduce(
@@ -881,7 +911,16 @@ function deleteReading(readingToDelete: Reading) {
       xpToRemove += 150
       removedRewardIds.push('jos-adventure')
     }
-
+// Ägypten-Abenteuerbonus zurücknehmen
+if (
+  book.id === 'exo' &&
+  bookWasComplete &&
+  !bookIsComplete &&
+  xpHistory.some(entry => entry.id === 'exo-adventure')
+) {
+  xpToRemove += 150
+  removedRewardIds.push('exo-adventure')
+}
   // Fortschritt speichern
   setReadings(updated)
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
@@ -945,9 +984,28 @@ function deleteReading(readingToDelete: Reading) {
         verseCount
       ).size === verseCount
   )
+
+const exodusBook = bibleBooks.find(book => book.id === 'exo')
+
+const exodusCompletedChapters = (exodusBook?.verses ?? []).map(
+  (verseCount, index) =>
+    historicalBooks.includes('exo') ||
+    getReadVerses(
+      readings,
+      'exo',
+      index + 1,
+      verseCount
+    ).size === verseCount
+)
+
 const josuaBadgeUnlocked =
   josuaCompletedChapters.length === 24 &&
   josuaCompletedChapters.every(Boolean)
+
+const exodusBadgeUnlocked =
+  exodusCompletedChapters.length === 40 &&
+  exodusCompletedChapters.every(Boolean)
+
 const chapterReadings = readings.filter(
   r => r.bookId === bookId && r.chapter === chapter
 )
@@ -1288,8 +1346,23 @@ const chapterReadings = readings.filter(
       <h1>Deine Abenteuerwelten</h1>
       <p>Jedes Bibelbuch erzählt seine eigene Geschichte.</p>
     </header>
-
     <div className="adventure-world-grid">
+<button
+  type="button"
+  className="adventure-world-card"
+  onClick={() => setPage('exodus-map')}
+>
+  <img
+  src={`${import.meta.env.BASE_URL}exodus-preview.png`}
+  alt="Low-Poly-Landschaft von Ägypten"
+/>
+  <div className="adventure-world-info">
+    <strong>2. Mose</strong>
+    <span>Der Auszug aus Ägypten</span>
+    <small>🏔️ Abenteuer betreten →</small>
+  </div>
+</button>
+    
       <button
         type="button"
         className="adventure-world-card available"
@@ -1306,8 +1379,10 @@ const chapterReadings = readings.filter(
         </div>
       </button>
 
+
+
       {[
-        { title: '2. Mose', subtitle: 'Der Auszug aus Ägypten', icon: '🏜️' },
+        
         { title: 'Richter', subtitle: 'Mut und Glauben', icon: '⚔️' },
         { title: '1. Samuel', subtitle: 'Propheten und Könige', icon: '👑' },
       ].map(world => (
@@ -1361,9 +1436,178 @@ const chapterReadings = readings.filter(
   }}
 />
 
+
   </div>
       
-) : page === 'profile' ? (
+
+ 
+) : page === 'exodus-map' ? (
+  <div className="adventure-page">
+    <button
+      type="button"
+      className="adventure-back-button"
+      onClick={() => setPage('adventure')}
+    >
+      ← Alle Abenteuer
+    </button>
+
+    <div className="adventure-heading">
+      <span>⛰️ DEINE BIBELREISE</span>
+      <h1>Abenteuer</h1>
+      <p>Erlebe die Bibel – Buch für Buch.</p>
+    </div>
+
+    <section className="adventure-compact-header">
+      <div>
+        <span className="adventure-label">
+          DEIN ERSTES ABENTEUER
+        </span>
+        <h2>2. Mose</h2>
+        <p>Der Auszug aus Ägypten</p>
+      </div>
+
+      <div className="adventure-compact-details">
+        <span>📖 40 Kapitel</span>
+        <span>📍 6 Stationen</span>
+      </div>
+    </section>
+
+   
+
+
+<ExodusMap
+
+completed={([1, 2, 3, 4, 5, 6] as const).filter((id) => {
+  const ranges = [
+    [1, 4],
+    [5, 12],
+    [12, 13],
+    [14, 15],
+    [16, 18],
+    [19, 40],
+  ]
+
+  const [start, end] = ranges[id - 1]
+
+  return exodusCompletedChapters
+    .slice(start - 1, end)
+    .every(Boolean) &&
+    exodusCompletedChapters.length === 40
+})}
+
+  onStationSelect={(station) => {
+    setSelectedExodusStation(station)
+  }}
+/>
+
+{selectedExodusStation && (
+  <section className="exodus-station-panel">
+    <div className="exodus-station-panel-header">
+      <span>
+        STATION {selectedExodusStation.id} VON 6
+      </span>
+      <button
+        type="button"
+        onClick={() => setSelectedExodusStation(null)}
+        aria-label="Stationsübersicht schließen"
+      >
+        ✕
+      </button>
+    </div>
+
+    <h2>{selectedExodusStation.title}</h2>
+    <p>{selectedExodusStation.reference}</p>
+
+<div className="exodus-station-progress">
+  <div className="exodus-station-progress-label">
+    <span>Lesefortschritt</span>
+    <span>
+      {exodusCompletedChapters
+        .slice(
+          selectedExodusStation.chapters[0] - 1,
+          selectedExodusStation.chapters[1]
+        )
+        .filter(Boolean).length}
+      {' / '}
+      {selectedExodusStation.chapters[1] -
+        selectedExodusStation.chapters[0] + 1} Kapitel
+    </span>
+  </div>
+
+  <progress
+    max={selectedExodusStation.chapters[1] -
+      selectedExodusStation.chapters[0] + 1}
+    value={exodusCompletedChapters
+      .slice(
+        selectedExodusStation.chapters[0] - 1,
+        selectedExodusStation.chapters[1]
+      )
+      .filter(Boolean).length}
+  />
+</div>
+
+{exodusCompletedChapters
+  .slice(
+    selectedExodusStation.chapters[0] - 1,
+    selectedExodusStation.chapters[1]
+  )
+  .every(Boolean) && (
+    <div className="exodus-station-completed">
+      ✓ Station abgeschlossen!
+    </div>
+  )}
+
+    <button
+      type="button"
+      onClick={() => {
+        selectChapter('exo', selectedExodusStation.chapters[0])
+        setPage('reading')
+      }}
+    >
+     
+{exodusCompletedChapters
+  .slice(
+    selectedExodusStation.chapters[0] - 1,
+    selectedExodusStation.chapters[1]
+  )
+  .every(Boolean)
+    ? '✓ Kapitel erneut lesen'
+    : 'Kapitel lesen →'}
+
+    </button>
+  </section>
+)}
+
+<section className={`josua-award ${exodusBadgeUnlocked ? 'unlocked' : 'locked'}`}>
+  <img
+    src={`${import.meta.env.BASE_URL}exodus-abzeichen.png`}
+    alt="Abzeichen Auf dem Weg in die Freiheit"
+    className="josua-award-image"
+  />
+
+  <div className="josua-award-content">
+    <span className="josua-info-label">
+      ABENTEUER-AUSZEICHNUNG
+    </span>
+
+    <h3>Auf dem Weg in die Freiheit</h3>
+
+    <p>
+      {exodusBadgeUnlocked
+        ? '🏆 Abzeichen freigeschaltet!'
+        : 'Schließe alle 40 Kapitel von 2. Mose ab, um dieses Abzeichen freizuschalten.'}
+    </p>
+
+    <strong>
+      {exodusCompletedChapters.filter(Boolean).length} / 40 Kapitel
+    </strong>
+  </div>
+</section>
+
+  </div>
+
+  ) : page === 'profile' ? (
+
   <div className="home-mobile">
     <section className="home-panel">
 
